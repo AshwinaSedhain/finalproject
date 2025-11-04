@@ -1,10 +1,9 @@
 // routes/authRoutes.js
 import express from "express";
 import { supabase } from "../supabaseClient.js";
-import { PrismaClient } from "@prisma/client";
-
+import prisma from "../lib/prisma.js";
 const router = express.Router();
-const prisma = new PrismaClient();
+
 
 // Sign up
 router.post("/signup", async (req, res) => {

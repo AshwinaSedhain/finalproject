@@ -1,9 +1,36 @@
-@import "tailwindcss";
+/* File: frontend/src/index.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #071025; /* main landing background fallback */
+  background: #071025;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* for message fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Improve prose styles from react-markdown */
+.prose p {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 }

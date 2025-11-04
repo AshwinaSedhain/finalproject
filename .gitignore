@@ -1,0 +1,30 @@
+# File: .gitignore
+
+# --- Secrets ---
+# Ignore all .env files in any directory. THIS IS CRITICAL.
+**/.env
+
+# --- Node.js Dependencies (Frontend & Backend) ---
+# Ignore the massive node_modules folder
+**/node_modules/
+# Ignore logs and build outputs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+/frontend/dist
+
+# --- Python Dependencies (AI Agent) ---
+# Ignore the Python virtual environment folder
+/ai-chatbot-module/venv/
+# Ignore Python bytecode and caches
+**/__pycache__/
+*.pyc
+
+# --- General ---
+# Ignore general log files
+/logs/
+*.log
+
+# --- OS-specific files ---
+.DS_Store
+Thumbs.db

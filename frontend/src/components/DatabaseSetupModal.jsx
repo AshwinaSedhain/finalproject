@@ -1,89 +1,93 @@
+// File: frontend/src/components/DatabaseSetupModal.jsx
+
 import React, { useState } from 'react';
-import { X, Check, AlertCircle, Database } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { testDatabaseConnection } from '../api';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 
-const DatabaseSetupModal = ({ isOpen, onClose, onSave, initialConfig }) => {
-  const [config, setConfig] = useState(initialConfig || { connectionString: '' });
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState(null);
+const DatabaseSetupModal = ({ isOpen, onSave }) => {
+  const [connectionString, setConnectionString] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null); // Will hold { status: 'success' | 'error', message: string }
+  const { token } = useAuth();
 
-  const handleTest = async () => {
-    setTesting(true);
+  const handleTestConnection = async () => {
+    if (!connectionString) {
+      setTestResult({ status: 'error', message: 'Connection string cannot be empty.' });
+      return;
+    }
+    setIsTesting(true);
     setTestResult(null);
-    
-    setTimeout(() => {
-      setTestResult({ success: true, message: 'Connection successful!' });
-      setTesting(false);
-    }, 1000);
-  };
+    try {
+      // ✅ THE FIX IS HERE:
+      // We wrap the connection string in a JSON object before sending.
+      // This sends the correct format: { "connectionString": "..." } to the backend.
+      const result = await testDatabaseConnection({ connectionString: connectionString }, token);
+      setTestResult(result);
 
-  const handleSave = () => {
-    if (config.connectionString) {
-      onSave(config);
+    } catch (error) {
+      // The API function will throw an error on network failure or non-200 responses.
+      setTestResult({ status: 'error', message: error.message || 'An unknown error occurred.' });
+    } finally {
+      setIsTesting(false);
     }
   };
 
+  const handleSave = () => {
+    if (testResult?.status !== 'success') {
+      alert("Please ensure the connection is tested successfully before saving.");
+      return;
+    }
+    // The parent component expects an object with the connection string
+    onSave({ connectionString });
+  };
+
+  // If the parent component decides not to show the modal, we render nothing.
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Database className="w-6 h-6 text-teal-600" />
-              <h2 className="text-xl font-semibold text-gray-900">Database Configuration</h2>
-            </div>
-            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-              <X className="w-5 h-5" />
-            </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 m-4">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Database Configuration</h2>
+        <p className="text-gray-600 mb-6">
+          To get started, please provide the connection string for the database you want to analyze. The chat functionality will be enabled after a successful connection.
+        </p>
+
+        <label htmlFor="db-connection-string" className="block text-sm font-medium text-gray-700 mb-1">Database Connection String</label>
+        <textarea
+          id="db-connection-string"
+          rows={4}
+          value={connectionString}
+          onChange={(e) => {
+            setConnectionString(e.target.value);
+            setTestResult(null); // Clear previous test result when user types
+          }}
+          placeholder="postgresql://user:password@host:port/dbname"
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500"
+        />
+        <p className="text-xs text-gray-500 mt-1">Example: postgresql://postgres:your_password@db.example.com:5432/postgres</p>
+        
+        {testResult && (
+          <div className={`mt-4 p-3 rounded-md text-sm flex items-center gap-2 ${testResult.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {testResult.status === 'success' ? <CheckCircle size={18} /> : <XCircle size={18} />}
+            <span>{testResult.message}</span>
           </div>
-        </div>
+        )}
 
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Database API
-            </label>
-            <textarea
-              value={config.connectionString}
-              onChange={(e) => setConfig({ connectionString: e.target.value })}
-              placeholder="postgresql://user:password@host:port/database&#10;&#10;"
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono text-sm resize-none"
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              Paste your full PostgreSQL connection string. This will be used to connect to your Supabase database.
-            </p>
-          </div>
-
-          {testResult && (
-            <div className={`p-3 rounded-lg flex items-start gap-2 ${
-              testResult.success ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
-            }`}>
-              {testResult.success ? (
-                <Check className="w-5 h-5 flex-shrink-0" />
-              ) : (
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              )}
-              <span className="text-sm">{testResult.message}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="p-6 border-t border-gray-200 flex gap-3">
+        <div className="mt-6 flex justify-end gap-3">
           <button
-            onClick={handleTest}
-            disabled={!config.connectionString || testing}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+            onClick={handleTestConnection}
+            disabled={isTesting || !connectionString}
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50 flex items-center justify-center min-w-[140px]"
           >
-            {testing ? 'Testing...' : 'Test Connection'}
+            {isTesting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Test Connection'}
           </button>
           <button
             onClick={handleSave}
-            disabled={!config.connectionString}
-            className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            disabled={isTesting || testResult?.status !== 'success'}
+            className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700 disabled:bg-gray-400"
           >
-            Save Configuration
+            Save & Continue
           </button>
         </div>
       </div>

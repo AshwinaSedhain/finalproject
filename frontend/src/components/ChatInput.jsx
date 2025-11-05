@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+// File: frontend/src/components/ChatInput.jsx
 
-const ChatInput = ({ onSend, disabled }) => {
+import React, { useState } from 'react';
+import { Send, Loader2, Square } from 'lucide-react';
+
+// ✅ UPDATED: Now accepts an onStop function
+const ChatInput = ({ onSend, disabled, isLoading, onStop }) => {
   const [message, setMessage] = useState('');
 
   const handleSubmit = () => {
@@ -18,24 +21,40 @@ const ChatInput = ({ onSend, disabled }) => {
     }
   };
 
+  // ✅ NEW: The "Stop generating" button UI
+  if (isLoading) {
+    return (
+      <div className="p-4 border-t border-gray-200 bg-white flex justify-center">
+        <button
+          onClick={onStop}
+          className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-100 flex items-center gap-2"
+        >
+          <Square size={16} />
+          Stop generating
+        </button>
+      </div>
+    );
+  }
+
+  // Original input UI
   return (
     <div className="p-4 border-t border-gray-200 bg-white">
-      <div className="flex gap-2">
-        <input
-          type="text"
+      <div className="relative">
+        <textarea
+          rows={1}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Ask for reports or insights... (e.g., 'Show me sales trends for last quarter')"
-          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          placeholder="Ask for reports or insights..."
+          className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
           disabled={disabled}
         />
         <button
           onClick={handleSubmit}
           disabled={disabled || !message.trim()}
-          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {disabled ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          <Send size={18} />
         </button>
       </div>
     </div>

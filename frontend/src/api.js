@@ -2,43 +2,23 @@
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-export const sendChatMessage = async (prompt, token) => {
+export const sendChatMessage = async (prompt, token, signal) => {
   try {
     const response = await fetch(`${API_URL}/api/chat/query`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ user_prompt: prompt })
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ user_prompt: prompt }),
+      signal: signal,
     });
-
-    const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.details || data.error || 'Failed to get response from server.');
+      const data = await response.json();
+      throw new Error(data.details || data.error || 'Failed to get response.');
     }
-    return data;
+    return response.json();
   } catch (error) {
-    console.error('Error sending chat message:', error);
-    throw error;
-  }
-};
-
-export const getDatabaseSummary = async (token) => {
-  try {
-    const response = await fetch(`${API_URL}/api/chat/database-summary`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.details || 'Failed to fetch database summary.');
+    if (error.name === 'AbortError') {
+      return { cancelled: true };
     }
-    return data;
-  } catch (error) {
-    console.error('Error fetching database summary:', error);
     throw error;
   }
 };
@@ -47,20 +27,18 @@ export const testDatabaseConnection = async (dbConfig, token) => {
   try {
     const response = await fetch(`${API_URL}/api/db/test-connection`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(dbConfig)
     });
-
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.details || 'Failed to test database connection.');
+      throw new Error(data.message || 'Failed to test connection.');
     }
     return data;
   } catch (error) {
     console.error('Error testing database connection:', error);
-    throw error;
+    throw new Error(error.message || 'Network error. Is the backend running?');
   }
 };
+
+// You can add other functions like getDatabaseSummary here if needed.

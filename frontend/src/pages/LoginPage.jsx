@@ -1,208 +1,417 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Loader2 , BarChart3} from "lucide-react";
+import {
+  Loader2,
+  BarChart3,
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+  ArrowLeft
+} from "lucide-react";
 
 const LoginPage = () => {
   const { login, signup } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
+  const [isLogin, setIsLogin] = useState(mode === 'signup' ? false : true);
+  
+  // Update mode when URL parameter changes
+  useEffect(() => {
+    if (mode === 'signup') {
+      setIsLogin(false);
+    } else if (mode === 'login') {
+      setIsLogin(true);
+    }
+  }, [mode]);
   const [formData, setFormData] = useState({ email: "", password: "", name: "" });
   const [loading, setLoading] = useState(false);
-  const [authMessage, setAuthMessage] = useState(""); // New state
+  const [authMessage, setAuthMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    if (!isLogin && !formData.name) {
+      newErrors.name = "Name is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
-    setAuthMessage(""); // Clear previous messages
+    setAuthMessage("");
+    setSuccess(false);
+    setErrors({});
+
     try {
       if (isLogin) {
         const user = await login(formData.email, formData.password);
         if (user) {
-          navigate("/"); // Only navigate if login succeeds
+          setSuccess(true);
+          // Check if database is configured
+          const savedConfig = localStorage.getItem("dbConfig");
+          if (savedConfig) {
+            try {
+              const config = JSON.parse(savedConfig);
+              if (config.connectionString) {
+                setTimeout(() => {
+                  navigate("/dashboard"); // Go to Analytics Dashboard
+                }, 500);
+                return;
+              }
+            } catch (e) {
+              // Invalid config
+            }
+          }
+          setTimeout(() => {
+            navigate("/welcome"); // Go to database setup
+          }, 500);
         }
       } else {
-        const { user, error, data } = await signup(
+        const result = await signup(
           formData.email,
           formData.password,
           formData.name
         );
 
-        if (error) {
-          setAuthMessage(error.message);
-        } else if (user === null) {
-          // This means signup succeeded but confirmation required
+        // signup returns { user, needsConfirmation } or throws error
+        if (result.needsConfirmation) {
+          setSuccess(true);
           setAuthMessage(
             `Signup successful! Please check your email (${formData.email}) to confirm your account before logging in.`
           );
-          setIsLogin(true);
-          setFormData({ email: "", password: "", name: "" });
-        } else {
-          // No confirmation required, can navigate
-          navigate("/");
+          setTimeout(() => {
+            setIsLogin(true);
+            setFormData({ ...formData, password: "" });
+            setSuccess(false);
+          }, 3000);
+        } else if (result.user) {
+          setSuccess(true);
+          setTimeout(() => {
+            navigate("/welcome");
+          }, 500);
         }
       }
     } catch (error) {
-      setAuthMessage(error.message);
+      setAuthMessage(error.message || "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-
-
-
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
+    if (e.key === "Enter") {
+      handleSubmit(e);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left side - Hero section with light theme */}
-      <div className="w-1/2 bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 relative overflow-hidden flex">
-        {/* Floating decorative elements */}
-        <div className="absolute top-20 right-20 w-72 h-72 bg-teal-200/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-teal-50/30 to-cyan-50/30 flex">
+      {/* Left side - Visual/Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-600 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl"></div>
         
-        <div className="relative z-10 flex flex-col justify-center px-16 py-12">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <BarChart3 className="w-10 h-10 text-teal-600" />
-            <span className="text-3xl font-bold text-gray-900">InsightAI</span>
-          </div>
+        <div className="relative z-10 flex flex-col justify-center px-16 py-12 text-white">
+          {/* Back to home button */}
+          <Link
+            to="/"
+            className="absolute top-8 left-8 flex items-center gap-2 text-white/90 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Back to home</span>
+          </Link>
 
-          {/* Main headline - larger and more prominent */}
-          <div className="space-y-8">
+          {/* Logo */}
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center gap-3 mb-16 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <BarChart3 className="w-7 h-7" />
+            </div>
+            <span className="text-3xl font-bold">InsightAI</span>
+          </button>
+
+          {/* Content */}
+          <div className="space-y-8 max-w-md">
             <div>
-              <h1 className="text-6xl font-bold text-gray-900 leading-tight mb-6">
-                Your data,
-                <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-cyan-600">
-                  analyzed instantly
-                </span>
+              <h1 className="text-5xl font-bold leading-tight mb-4">
+                {isLogin ? "Welcome Back" : "Join InsightAI"}
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed max-w-md">
-                Transform complex databases into actionable insights with natural language. No SQL required.
+              <p className="text-xl text-white/90 leading-relaxed">
+                {isLogin
+                  ? "Sign in to continue analyzing your data with AI-powered insights."
+                  : "Start transforming your data into actionable insights today."}
               </p>
             </div>
 
-            {/* Simplified feature list - just text, no boxes */}
-            <div className="space-y-3 pt-8">
-              <div className="flex items-center gap-3 text-gray-700">
-                <div className="w-1.5 h-1.5 bg-teal-600 rounded-full"></div>
-                <span className="text-lg">AI-powered intelligence</span>
+            {/* Feature highlights */}
+            <div className="space-y-4 pt-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div>
+                  <p className="font-medium">AI-Powered Analysis</p>
+                  <p className="text-sm text-white/80">Natural language queries with instant results</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <div className="w-1.5 h-1.5 bg-teal-600 rounded-full"></div>
-                <span className="text-lg">Lightning fast reports</span>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div>
+                  <p className="font-medium">Secure & Private</p>
+                  <p className="text-sm text-white/80">Enterprise-grade security for your data</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-gray-700">
-                <div className="w-1.5 h-1.5 bg-teal-600 rounded-full"></div>
-                <span className="text-lg">Enterprise security</span>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+                <div>
+                  <p className="font-medium">Beautiful Visualizations</p>
+                  <p className="text-sm text-white/80">Interactive charts and reports</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right side - Auth form with matching light theme */}
-      <div className="w-1/2 flex items-center justify-center p-8 bg-white">
+      {/* Right side - Auth Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white">
         <div className="w-full max-w-md">
+          {/* Mobile back button */}
+          <Link
+            to="/"
+            className="lg:hidden flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">Back</span>
+          </Link>
+
           {/* Mobile logo */}
-          <div className="hidden flex items-center gap-2 mb-8">
+          <button 
+            onClick={() => navigate('/')}
+            className="lg:hidden flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <BarChart3 className="w-8 h-8 text-teal-600" />
             <span className="text-2xl font-bold text-gray-900">InsightAI</span>
-          </div>
+          </button>
 
-          {/* Auth card */}
+          {/* Auth Card */}
           <div>
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {isLogin ? 'Welcome back' : 'Get started free'}
+                {isLogin ? "Sign in to your account" : "Create your account"}
               </h2>
               <p className="text-gray-600">
-                {isLogin ? 'Sign in to continue to your workspace' : 'Create your account in seconds'}
+                {isLogin
+                  ? "Enter your credentials to access your workspace"
+                  : "Fill in your details to get started"}
               </p>
             </div>
 
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Full Name
                   </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    onKeyPress={handleKeyPress}
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (errors.name) setErrors({ ...errors, name: "" });
+                      }}
+                      onKeyPress={handleKeyPress}
+                      placeholder="John Doe"
+                      className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                        errors.name
+                          ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                          : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                      }`}
+                    />
+                  </div>
+                  {errors.name && (
+                    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
               )}
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  onKeyPress={handleKeyPress}
-                  placeholder="you@company.com"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Mail className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (errors.email) setErrors({ ...errors, email: "" });
+                    }}
+                    onKeyPress={handleKeyPress}
+                    placeholder="you@company.com"
+                    className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                      errors.email
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  onKeyPress={handleKeyPress}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Lock className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      if (errors.password) setErrors({ ...errors, password: "" });
+                    }}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter your password"
+                    className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                      errors.password
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
+              {authMessage && (
+                <div
+                  className={`p-4 rounded-lg flex items-start gap-3 ${
+                    success
+                      ? "bg-green-50 border border-green-200"
+                      : "bg-red-50 border border-red-200"
+                  }`}
+                >
+                  {success ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p
+                    className={`text-sm ${
+                      success ? "text-green-700" : "text-red-700"
+                    }`}
+                  >
+                    {authMessage}
+                  </p>
+                </div>
+              )}
+
               <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all disabled:bg-gray-400 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                type="submit"
+                disabled={loading || success}
+                className="w-full py-3.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
+                  <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </span>
+                    {isLogin ? "Signing in..." : "Creating account..."}
+                  </>
+                ) : success ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    {isLogin ? "Success! Redirecting..." : "Account created!"}
+                  </>
                 ) : (
-                  isLogin ? 'Sign In' : 'Create Account'
+                  <>{isLogin ? "Sign In" : "Create Account"}</>
                 )}
               </button>
-              {authMessage && (
-  <p className="mt-3 text-sm text-red-600 text-center">{authMessage}</p>
-)}
-
-            </div>
+            </form>
 
             <div className="mt-6 text-center">
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setAuthMessage("");
+                  setErrors({});
+                  setSuccess(false);
+                }}
                 className="text-sm text-gray-600 hover:text-teal-600 transition-colors"
               >
                 {isLogin ? (
                   <>
-                    Don't have an account? <span className="font-semibold text-teal-600">Sign up free</span>
+                    Don't have an account?{" "}
+                    <span className="font-semibold text-teal-600">Sign up for free</span>
                   </>
                 ) : (
                   <>
-                    Already have an account? <span className="font-semibold text-teal-600">Sign in</span>
+                    Already have an account?{" "}
+                    <span className="font-semibold text-teal-600">Sign in</span>
                   </>
                 )}
               </button>
@@ -210,10 +419,14 @@ const LoginPage = () => {
 
             <div className="mt-8 pt-6 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
-                By continuing, you agree to our{' '}
-                <span className="text-teal-600 hover:underline cursor-pointer">Terms of Service</span>
-                {' '}and{' '}
-                <span className="text-teal-600 hover:underline cursor-pointer">Privacy Policy</span>
+                By continuing, you agree to our{" "}
+                <a href="#" className="text-teal-600 hover:underline">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="#" className="text-teal-600 hover:underline">
+                  Privacy Policy
+                </a>
               </p>
             </div>
           </div>

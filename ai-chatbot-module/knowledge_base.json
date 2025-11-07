@@ -1,0 +1,184 @@
+{
+  "users": {
+    "description": "The 'users' table stores essential information about registered users, including login credentials, contact details, and profile data, to facilitate authentication, authorization, and personalized experiences.",
+    "columns": {
+      "user_id": {
+        "type": "INTEGER",
+        "description": "The 'user_id' column in the 'users' table serves as a unique identifier for each user, enabling efficient tracking and management of individual user accounts.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "first_name": {
+        "type": "VARCHAR(50)",
+        "description": "The 'first_name' column in the 'users' table stores the given name of each user, enabling personalized communication and user identification.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "last_name": {
+        "type": "VARCHAR(50)",
+        "description": "The 'last_name' column in the 'users' table stores the surname of each registered user, enabling personalized communication and record-keeping.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "email": {
+        "type": "VARCHAR(100)",
+        "description": "The 'email' column in the 'users' table stores the unique email address associated with each user's account.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "phone": {
+        "type": "VARCHAR(20)",
+        "description": "The 'phone' column in the 'users' table stores the primary contact phone number for each user, enabling effective communication and outreach.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "age": {
+        "type": "INTEGER",
+        "description": "The 'age' column in the 'users' table stores the numerical value representing the user's current age, enabling demographic analysis and targeted marketing initiatives.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "gender": {
+        "type": "VARCHAR(10)",
+        "description": "The 'gender' column in the 'users' table stores the male/female/non-binary designation of each user to facilitate demographic analysis and targeted marketing initiatives.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "description": "The 'created_at' column in the 'users' table stores the date and time when each user account was initially registered.",
+        "is_primary_key": false,
+        "foreign_key": null
+      }
+    }
+  },
+  "wallets": {
+    "description": "The 'wallets' table stores financial account information for users, tracking balances, transaction histories, and other relevant details to facilitate secure and efficient monetary management.",
+    "columns": {
+      "wallet_id": {
+        "type": "INTEGER",
+        "description": "The 'wallet_id' column serves as a unique identifier for each wallet record in the 'wallets' table, enabling efficient tracking and management of individual wallets.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "user_id": {
+        "type": "INTEGER",
+        "description": "The 'user_id' column in the 'wallets' table uniquely identifies the owner of a specific wallet, linking it to the corresponding user's account information.",
+        "is_primary_key": false,
+        "foreign_key": "references users(user_id)"
+      },
+      "balance": {
+        "type": "NUMERIC(15, 2)",
+        "description": "The 'balance' column in the 'wallets' table represents the current financial amount available in each wallet.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "currency": {
+        "type": "VARCHAR(10)",
+        "description": "The 'currency' column in the 'wallets' table stores the type of currency associated with each wallet, enabling multi-currency support and accurate financial tracking.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "description": "The 'created_at' column in the 'wallets' table stores the timestamp when a wallet was initially created, providing a record of the wallet's origination date and time.",
+        "is_primary_key": false,
+        "foreign_key": null
+      }
+    }
+  },
+  "transactions": {
+    "description": "The 'transactions' table stores a chronological record of all financial transactions, including payment details, timestamps, and associated customer and product information.",
+    "columns": {
+      "transaction_id": {
+        "type": "INTEGER",
+        "description": "The 'transaction_id' column uniquely identifies each financial transaction recorded in the database.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "wallet_id": {
+        "type": "INTEGER",
+        "description": "The 'wallet_id' column uniquely identifies the digital wallet associated with each transaction in the 'transactions' table.",
+        "is_primary_key": false,
+        "foreign_key": "references wallets(wallet_id)"
+      },
+      "merchant_id": {
+        "type": "INTEGER",
+        "description": "The 'merchant_id' column stores a unique identifier for the merchant or vendor involved in each transaction, enabling tracking and analysis of sales activity by merchant.",
+        "is_primary_key": false,
+        "foreign_key": "references merchants(merchant_id)"
+      },
+      "amount": {
+        "type": "NUMERIC(15, 2)",
+        "description": "The 'amount' column in the 'transactions' table represents the monetary value associated with each individual transaction.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "transaction_type": {
+        "type": "VARCHAR(20)",
+        "description": "The 'transaction_type' column categorizes each transaction as a specific financial activity, such as a purchase, refund, or transfer, to facilitate tracking and analysis of business operations.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "status": {
+        "type": "VARCHAR(20)",
+        "description": "The 'status' column in the 'transactions' table tracks the current state of each transaction, such as pending, approved, or declined, to facilitate monitoring and management of financial activities.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "transaction_date": {
+        "type": "TIMESTAMP",
+        "description": "The 'transaction_date' column stores the date on which each financial transaction occurred, enabling tracking and analysis of business activities over time.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "description": {
+        "type": "TEXT",
+        "description": "The 'description' column in the 'transactions' table stores a brief narrative of each transaction, providing context and details about the nature of the financial activity.",
+        "is_primary_key": false,
+        "foreign_key": null
+      }
+    }
+  },
+  "merchants": {
+    "description": "The 'merchants' table stores key information about registered businesses, including their identification, contact details, and transactional data, to facilitate efficient management and analysis of merchant relationships.",
+    "columns": {
+      "merchant_id": {
+        "type": "INTEGER",
+        "description": "The 'merchant_id' column uniquely identifies each merchant in the database, serving as a primary key to distinguish and track individual merchant records.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "merchant_name": {
+        "type": "VARCHAR(100)",
+        "description": "The 'merchant_name' column stores the official name of each merchant, uniquely identifying them for business transactions and relationships.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "category": {
+        "type": "VARCHAR(50)",
+        "description": "The 'category' column in the 'merchants' table stores the specific industry or sector that each merchant operates within.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "contact_email": {
+        "type": "VARCHAR(100)",
+        "description": "The 'contact_email' column stores the primary email address for each merchant, serving as a key point of contact for communication and support.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "contact_phone": {
+        "type": "VARCHAR(20)",
+        "description": "The 'contact_phone' column stores the primary phone number for each merchant, enabling efficient communication and support.",
+        "is_primary_key": false,
+        "foreign_key": null
+      },
+      "created_at": {
+        "type": "TIMESTAMP",
+        "description": "The 'created_at' column in the 'merchants' table stores the timestamp when a merchant account was initially set up in the system.",
+        "is_primary_key": false,
+        "foreign_key": null
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+# Web Framework & Server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Database & Data Handling
+python-dotenv>=1.0.0
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+pandas>=2.1.0
+numpy>=1.26.0
+
+# AI & Machine Learning
+groq>=0.4.0
+requests>=2.31.0  # For Hugging Face API
+google-generativeai>=0.3.0  # For Google Gemini (free tier)
+sentence-transformers>=2.3.0
+torch>=2.2.0
+pyspellchecker>=0.8.0
+
+# Visualization
+plotly>=5.18.0
+kaleido>=0.2.1
+
+# External Services
+supabase>=2.0.0

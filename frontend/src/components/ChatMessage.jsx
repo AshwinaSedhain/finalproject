@@ -1,15 +1,14 @@
 // src/components/ChatMessage.jsx
 import React, { useState } from 'react';
 import { Bot, User, Edit2, Check, X } from 'lucide-react';
-import { useTypewriter } from '../hooks/useTypewriter';
 import ReactMarkdown from 'react-markdown';
 
-// A new, simple component for the "typing" animation
+// ChatGPT-style typing indicator
 const TypingIndicator = () => (
-  <div className="flex items-center space-x-1 p-2">
-    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-sm"></span>
-    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-sm animation-delay-200"></span>
-    <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-sm animation-delay-400"></span>
+  <div className="flex items-center space-x-1.5 py-1">
+    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
   </div>
 );
 
@@ -23,12 +22,12 @@ const ChatMessage = ({ message, isLoading, onEdit, messageIndex, isLastUserMessa
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content || '');
   
-  // Apply the typewriter effect only to non-loading assistant messages
+  // Show full text immediately - no typewriter animation
   const messageContent = message.content || '';
-  const animatedText = !isUser && !isLoading && messageContent ? useTypewriter(messageContent) : messageContent;
+  const animatedText = messageContent; // Always show full text, no animation
 
   const Avatar = () => (
-    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-teal-600' : 'bg-gray-700'}`}>
+    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-[#0b93f6]' : 'bg-[#19c37d]'}`}>
       {isUser ? <User size={18} className="text-white" /> : <Bot size={18} className="text-white" />}
     </div>
   );
@@ -89,30 +88,47 @@ const ChatMessage = ({ message, isLoading, onEdit, messageIndex, isLastUserMessa
   }
 
   return (
-    <div className={`group flex gap-3 my-4 animate-fade-in ${isUser ? 'justify-end' : 'justify-start'}`}>
-      {!isUser && <Avatar />}
+    <div className={`group flex gap-4 px-4 py-4 ${isUser ? 'justify-end bg-gray-50' : 'justify-start bg-white'}`}>
+      {!isUser && (
+        <div className="flex-shrink-0">
+          <Avatar />
+        </div>
+      )}
       <div className={`
-        max-w-2xl px-4 py-3 rounded-xl shadow-sm relative
-        ${isUser ? 'bg-teal-600 text-white' : 'bg-white text-gray-800 border border-gray-200'}
+        max-w-3xl w-full relative
+        ${isUser ? 'flex justify-end' : 'flex justify-start'}
       `}>
-        {isUser && isLastUserMessage && !isLoading && onEdit && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="absolute -top-2 -left-2 p-1.5 bg-white text-gray-600 rounded-full shadow-md hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200"
-            title="Edit message"
-          >
-            <Edit2 size={14} />
-          </button>
-        )}
-        {isLoading ? (
-          <TypingIndicator />
-        ) : (
-          <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{animatedText}</ReactMarkdown>
-          </div>
-        )}
+        <div className={`
+          px-4 py-3 rounded-2xl relative
+          ${isUser 
+            ? 'bg-[#0b93f6] text-white rounded-br-sm' 
+            : 'bg-[#f7f7f8] text-gray-900 rounded-bl-sm border border-gray-200/50'
+          }
+          ${isLoading ? 'min-h-[40px]' : ''}
+        `}>
+          {isUser && isLastUserMessage && !isLoading && onEdit && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="absolute -top-8 right-0 p-1.5 bg-white text-gray-600 rounded-lg shadow-md hover:bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity border border-gray-200"
+              title="Edit message"
+            >
+              <Edit2 size={14} />
+            </button>
+          )}
+          {isLoading ? (
+            <TypingIndicator />
+          ) : (
+            <div className="prose prose-sm max-w-none prose-headings:font-semibold prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-code:text-sm prose-pre:bg-gray-900 prose-pre:text-gray-100">
+              <ReactMarkdown>{animatedText}</ReactMarkdown>
+            </div>
+          )}
+        </div>
       </div>
-      {isUser && <Avatar />}
+      {isUser && (
+        <div className="flex-shrink-0">
+          <Avatar />
+        </div>
+      )}
     </div>
   );
 };

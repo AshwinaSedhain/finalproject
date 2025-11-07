@@ -31,9 +31,16 @@ const ChatInput = ({ onSend, disabled, isLoading, onStop, suggestions = [] }) =>
 
   // Handle stop button click - always enabled during loading
   const handleStopClick = (e) => {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    console.log('[ChatInput] Stop button clicked, isLoading:', isLoading, 'onStop:', !!onStop);
     if (isLoading && onStop) {
+      console.log('[ChatInput] Calling onStop handler...');
       onStop();
+    } else {
+      console.warn('[ChatInput] Stop button clicked but isLoading is', isLoading, 'or onStop is', !!onStop);
     }
   };
 
@@ -54,7 +61,7 @@ const ChatInput = ({ onSend, disabled, isLoading, onStop, suggestions = [] }) =>
                   onSend(suggestion);
                 }}
                 disabled={disabled || isLoading}
-                className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-teal-50 hover:border-teal-300 hover:text-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-full hover:bg-gray-100 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {suggestion}
               </button>
@@ -63,7 +70,7 @@ const ChatInput = ({ onSend, disabled, isLoading, onStop, suggestions = [] }) =>
         </div>
       )}
       
-      <div className="p-4">
+      <div className="p-4 max-w-4xl mx-auto">
         <div className="relative">
           <textarea
             rows={1}
@@ -84,34 +91,38 @@ const ChatInput = ({ onSend, disabled, isLoading, onStop, suggestions = [] }) =>
               }
               handleKeyPress(e);
             }}
-            placeholder={isLoading ? "Generating response..." : "Ask for reports or insights..."}
-            className={`w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none transition-colors ${
+            placeholder={isLoading ? "Generating response..." : "Message InsightAI..."}
+            className={`w-full px-4 py-3 pr-14 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0b93f6] resize-none transition-colors text-sm ${
               isLoading 
                 ? 'bg-gray-100 cursor-not-allowed opacity-60 pointer-events-none' 
                 : 'bg-white'
             } disabled:bg-gray-100 disabled:cursor-not-allowed`}
             disabled={disabled || isLoading}
             readOnly={isLoading}
+            style={{ maxHeight: '200px', minHeight: '44px' }}
           />
           
-          {/* ChatGPT-style: Send button becomes Stop button during generation */}
-          <button
-            onClick={isLoading ? handleStopClick : handleSubmit}
-            disabled={disabled || (!isLoading && !message.trim())}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${
-              isLoading
-                ? 'bg-gray-700 hover:bg-gray-800 text-white cursor-pointer shadow-lg'
-                : 'bg-teal-600 hover:bg-teal-700 text-white disabled:bg-gray-300 disabled:cursor-not-allowed'
-            }`}
-            title={isLoading ? "Stop generating" : "Send message"}
-            type="button"
-          >
-            {isLoading ? (
-              <Square size={18} className="fill-current" />
-            ) : (
-              <Send size={18} />
-            )}
-          </button>
+          {/* ChatGPT-style: Send button becomes Stop button during generation - ALWAYS VISIBLE WHEN LOADING */}
+          {isLoading ? (
+            <button
+              onClick={handleStopClick}
+              className="absolute right-2 bottom-2 p-2 rounded-lg bg-gray-700 hover:bg-gray-800 text-white cursor-pointer shadow-md transition-all flex items-center justify-center"
+              title="Stop generating"
+              type="button"
+            >
+              <Square size={16} className="fill-current" />
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={disabled || !message.trim()}
+              className="absolute right-2 bottom-2 p-2 rounded-lg bg-[#0b93f6] hover:bg-[#0a7bc8] text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+              title="Send message"
+              type="button"
+            >
+              <Send size={16} />
+            </button>
+          )}
         </div>
       </div>
     </div>

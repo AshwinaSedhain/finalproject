@@ -134,18 +134,18 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-teal-50/30 to-cyan-50/30 flex">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 flex">
       {/* Left side - Visual/Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-600 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl"></div>
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950 relative overflow-hidden">
+        {/* Decorative elements - Blue accents */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-400/15 rounded-full blur-3xl"></div>
         
         <div className="relative z-10 flex flex-col justify-center px-16 py-12 text-white">
           {/* Back to home button */}
           <Link
             to="/"
-            className="absolute top-8 left-8 flex items-center gap-2 text-white/90 hover:text-white transition-colors"
+            className="absolute top-8 left-8 flex items-center gap-2 text-white/90 hover:text-blue-300 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium">Back to home</span>
@@ -156,10 +156,10 @@ const LoginPage = () => {
             onClick={() => navigate('/')}
             className="flex items-center gap-3 mb-16 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-              <BarChart3 className="w-7 h-7" />
+            <div className="w-12 h-12 bg-blue-900 rounded-xl flex items-center justify-center border-2 border-blue-400/30 shadow-xl">
+              <BarChart3 className="w-7 h-7 text-blue-400" />
             </div>
-            <span className="text-3xl font-bold">InsightAI</span>
+            <span className="text-3xl font-bold text-white">InsightAI</span>
           </button>
 
           {/* Content */}
@@ -178,29 +178,29 @@ const LoginPage = () => {
             {/* Feature highlights */}
             <div className="space-y-4 pt-4">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div>
-                  <p className="font-medium">AI-Powered Analysis</p>
+                  <p className="font-medium text-white">AI-Powered Analysis</p>
                   <p className="text-sm text-white/80">Natural language queries with instant results</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div>
-                  <p className="font-medium">Secure & Private</p>
+                  <p className="font-medium text-white">Secure & Private</p>
                   <p className="text-sm text-white/80">Enterprise-grade security for your data</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div>
-                  <p className="font-medium">Beautiful Visualizations</p>
+                  <p className="font-medium text-white">Beautiful Visualizations</p>
                   <p className="text-sm text-white/80">Interactive charts and reports</p>
                 </div>
               </div>
@@ -215,7 +215,7 @@ const LoginPage = () => {
           {/* Mobile back button */}
           <Link
             to="/"
-            className="lg:hidden flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6"
+            className="lg:hidden flex items-center gap-2 text-slate-600 hover:text-teal-700 transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium">Back</span>
@@ -226,8 +226,10 @@ const LoginPage = () => {
             onClick={() => navigate('/')}
             className="lg:hidden flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <BarChart3 className="w-8 h-8 text-teal-600" />
-            <span className="text-2xl font-bold text-gray-900">InsightAI</span>
+            <div className="w-10 h-10 bg-blue-800 rounded-xl flex items-center justify-center border-2 border-blue-400/30">
+              <BarChart3 className="w-6 h-6 text-blue-400" />
+            </div>
+            <span className="text-2xl font-bold text-slate-900">InsightAI</span>
           </button>
 
           {/* Auth Card */}
@@ -265,7 +267,7 @@ const LoginPage = () => {
                       className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
                         errors.name
                           ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                          : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                          : "border-gray-300 focus:ring-blue-400 focus:border-blue-400"
                       }`}
                     />
                   </div>
@@ -298,7 +300,7 @@ const LoginPage = () => {
                     className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
                       errors.email
                         ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                        : "border-gray-300 focus:ring-yellow-400 focus:border-yellow-400"
                     }`}
                   />
                 </div>
@@ -330,7 +332,7 @@ const LoginPage = () => {
                     className={`w-full pl-12 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
                       errors.password
                         ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                        : "border-gray-300 focus:ring-teal-500 focus:border-teal-500"
+                        : "border-gray-300 focus:ring-yellow-400 focus:border-yellow-400"
                     }`}
                   />
                   <button
@@ -375,7 +377,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={loading || success}
-                className="w-full py-3.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -401,17 +403,17 @@ const LoginPage = () => {
                   setErrors({});
                   setSuccess(false);
                 }}
-                className="text-sm text-gray-600 hover:text-teal-600 transition-colors"
+                className="text-sm text-gray-600 hover:text-blue-600 transition-colors"
               >
                 {isLogin ? (
                   <>
                     Don't have an account?{" "}
-                    <span className="font-semibold text-teal-600">Sign up for free</span>
+                    <span className="font-semibold text-blue-600">Sign up for free</span>
                   </>
                 ) : (
                   <>
                     Already have an account?{" "}
-                    <span className="font-semibold text-teal-600">Sign in</span>
+                    <span className="font-semibold text-blue-600">Sign in</span>
                   </>
                 )}
               </button>
@@ -420,11 +422,11 @@ const LoginPage = () => {
             <div className="mt-8 pt-6 border-t border-gray-200">
               <p className="text-xs text-gray-500 text-center">
                 By continuing, you agree to our{" "}
-                <a href="#" className="text-teal-600 hover:underline">
+                <a href="#" className="text-blue-600 hover:underline">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-teal-600 hover:underline">
+                <a href="#" className="text-blue-600 hover:underline">
                   Privacy Policy
                 </a>
               </p>

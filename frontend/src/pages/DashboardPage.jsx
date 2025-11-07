@@ -38,13 +38,30 @@ const DashboardPage = () => {
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const [activeReportId, setActiveReportId] = useState(null);
 
-  // Quick suggestion prompts (shorter versions for inline display)
-  const quickSuggestions = [
-    "Monthly revenue",
-    "Top products",
-    "Customer count",
-    "Sales trends"
+  // Quick suggestion prompts (shorter versions for inline display) - Rotates dynamically
+  const allQuickSuggestions = [
+    "Monthly revenue", "Top products", "Customer count", "Sales trends",
+    "Profit analysis", "Inventory status", "Best sellers", "Revenue by category",
+    "Low stock items", "Customer analysis", "Yearly comparison", "Regional sales",
+    "Product performance", "Sales forecast", "Top customers", "Order trends",
+    "Cost analysis", "Growth metrics", "Conversion rate", "Average order value"
   ];
+  
+  const [quickSuggestions, setQuickSuggestions] = useState(() => {
+    // Randomly select 4 suggestions on mount
+    const shuffled = [...allQuickSuggestions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 4);
+  });
+
+  // Rotate quick suggestions every 20 seconds
+  useEffect(() => {
+    const rotationInterval = setInterval(() => {
+      const shuffled = [...allQuickSuggestions].sort(() => 0.5 - Math.random());
+      setQuickSuggestions(shuffled.slice(0, 4));
+    }, 20000); // 20 seconds
+
+    return () => clearInterval(rotationInterval);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("chatConversations", JSON.stringify(conversations));
@@ -69,7 +86,8 @@ const DashboardPage = () => {
           role: 'assistant',
           content: '👋 **Hello! I\'m your AI data assistant.**\n\nI can help you:\n- 📊 Analyze sales, revenue, and business metrics\n- 📈 Generate charts and visualizations\n- 💡 Answer questions about your data\n- 🔍 Provide insights and recommendations\n\nTry clicking on one of the suggestions below or ask me anything about your database!'
         }],
-        reports: []
+        reports: [],
+        closedReports: []
       };
       setConversations({ [initialConvoId]: welcomeMessage });
       setActiveConversationId(initialConvoId);
@@ -83,12 +101,27 @@ const DashboardPage = () => {
   const currentConversation = conversations[activeConversationId] || null;
   const messages = (currentConversation?.messages && Array.isArray(currentConversation.messages)) ? currentConversation.messages : [];
   const openReports = (currentConversation?.reports && Array.isArray(currentConversation.reports)) ? currentConversation.reports : [];
+  const closedReports = (currentConversation?.closedReports && Array.isArray(currentConversation.closedReports)) ? currentConversation.closedReports : [];
+  
+  // Debug: Log when conversation changes to help diagnose chart display issues
+  useEffect(() => {
+    if (currentConversation) {
+      console.log('[Dashboard] Conversation loaded:', {
+        id: currentConversation.id,
+        title: currentConversation.title,
+        reportsCount: openReports.length,
+        closedReportsCount: closedReports.length,
+        reports: openReports.map(r => ({ id: r.id, title: r.title }))
+      });
+    }
+  }, [activeConversationId, currentConversation?.id]);
   const chatHistory = Object.values(conversations || {})
     .filter(c => c && c.id && c.title)
     .map(c => ({ id: c.id, title: c.title, timestamp: c.timestamp }))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   
   // Set active report ID if not set or if reports changed
+  // Also trigger when conversation changes to ensure charts are displayed
   useEffect(() => {
     if (openReports.length > 0) {
       if (!activeReportId || !openReports.find(r => r.id === activeReportId)) {
@@ -97,7 +130,7 @@ const DashboardPage = () => {
     } else {
       setActiveReportId(null);
     }
-  }, [openReports, activeReportId]);
+  }, [openReports, activeReportId, activeConversationId]); // Added activeConversationId dependency
   
   const currentReport = openReports.find((r) => r.id === activeReportId);
 
@@ -198,7 +231,8 @@ const DashboardPage = () => {
           title: prompt.substring(0, 50), 
           timestamp: new Date().toISOString(), 
           messages: [], 
-          reports: [] 
+          reports: [],
+          closedReports: []
         };
         setConversations(prev => ({ ...prev, [convoId]: newConvo }));
         setActiveConversationId(convoId);
@@ -217,7 +251,8 @@ const DashboardPage = () => {
             title: prompt.substring(0, 50), 
             timestamp: new Date().toISOString(), 
             messages: [], 
-            reports: [] 
+            reports: [],
+            closedReports: []
           };
           return {
             ...prev,
@@ -233,10 +268,20 @@ const DashboardPage = () => {
       });
       
       try {
+        // Check if already aborted before making the request
+        if (signal.aborted) {
+          console.log('[Chat] Signal already aborted before request');
+          setIsLoading(false);
+          abortControllerRef.current = null;
+          isProcessingRef.current = false;
+          return;
+        }
+        
         const aiResult = await sendChatMessage(prompt.trim(), token, signal, dbConfig?.connectionString);
         
         // Check if request was aborted or cancelled
-        if (signal.aborted || (aiResult && aiResult.cancelled)) { 
+        if (signal.aborted || (aiResult && aiResult.cancelled)) {
+          console.log('[Chat] Request was aborted or cancelled'); 
           setIsLoading(false);
           abortControllerRef.current = null;
           isProcessingRef.current = false;
@@ -256,7 +301,8 @@ const DashboardPage = () => {
                 title: prompt.substring(0, 50), 
                 timestamp: new Date().toISOString(), 
                 messages: [], 
-                reports: [] 
+                reports: [],
+        closedReports: [] 
               };
               return {
                 ...prev,
@@ -302,7 +348,8 @@ const DashboardPage = () => {
             title: prompt.substring(0, 50), 
             timestamp: new Date().toISOString(), 
             messages: [], 
-            reports: [] 
+            reports: [],
+        closedReports: [] 
           };
           const updatedReports = newReport ? [...(Array.isArray(convo.reports) ? convo.reports : []), newReport] : (Array.isArray(convo.reports) ? convo.reports : []);
           return {
@@ -325,7 +372,27 @@ const DashboardPage = () => {
         }
       } catch (error) {
       console.error('Error sending message:', error);
-      if (error.name !== 'AbortError') {
+      // If aborted, don't show error message - just clean up
+      if (error.name === 'AbortError' || signal.aborted) {
+        console.log('[Chat] Request was aborted by user');
+        // Remove incomplete assistant message if it exists
+        setConversations(prev => {
+          const convo = prev[convoId];
+          if (convo && convo.messages && convo.messages.length > 0) {
+            const lastMessage = convo.messages[convo.messages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant' && (!lastMessage.content || lastMessage.content.trim() === '')) {
+              return {
+                ...prev,
+                [convoId]: {
+                  ...convo,
+                  messages: convo.messages.slice(0, -1)
+                }
+              };
+            }
+          }
+          return prev;
+        });
+      } else {
         const errorMessage = { 
           role: "assistant", 
           content: `Sorry, an error occurred: ${error.message || 'Please try again.'}` 
@@ -337,7 +404,8 @@ const DashboardPage = () => {
               title: prompt.substring(0, 50), 
               timestamp: new Date().toISOString(), 
               messages: [], 
-              reports: [] 
+              reports: [],
+        closedReports: [] 
             };
             return {
               ...prev,
@@ -371,10 +439,18 @@ const DashboardPage = () => {
   };
 
   const handleStop = () => {
+    console.log('[Chat] Stop button clicked, isLoading:', isLoading);
+    
+    // Abort the current request IMMEDIATELY
     if (abortControllerRef.current) {
+      console.log('[Chat] Aborting request...');
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    
+    // Release all locks IMMEDIATELY
+    isProcessingRef.current = false;
+    setIsLoading(false);
     
     // Remove the last (incomplete) assistant message if it exists
     const convoId = activeConversationId;
@@ -398,9 +474,7 @@ const DashboardPage = () => {
       });
     }
     
-    // Release all locks
-    setIsLoading(false);
-    isProcessingRef.current = false;
+    console.log('[Chat] Stop completed, isLoading set to false');
   };
 
   const handleEditMessage = async (messageIndex, newContent) => {
@@ -439,7 +513,52 @@ const DashboardPage = () => {
     }, 100);
   };
 
-  const handleSelectChat = (chat) => { setActiveConversationId(chat.id); setSidebarOpen(false); };
+  const handleSelectChat = (chat) => { 
+    setActiveConversationId(chat.id); 
+    setSidebarOpen(false);
+    // Ensure charts are displayed when switching conversations
+    // The useEffect will handle setting activeReportId
+  };
+
+  const handleShowCharts = (chatId) => {
+    // Switch to this conversation
+    setActiveConversationId(chatId);
+    setSidebarOpen(false);
+    
+    // Restore all closed charts to open charts
+    setConversations(prev => {
+      const convo = prev[chatId];
+      if (!convo) return prev;
+      
+      const closedReports = Array.isArray(convo.closedReports) ? convo.closedReports : [];
+      const openReports = Array.isArray(convo.reports) ? convo.reports : [];
+      
+      // If there are closed charts, restore them
+      if (closedReports.length > 0) {
+        const allReports = [...openReports, ...closedReports];
+        
+        // Set the first chart as active
+        if (allReports.length > 0) {
+          setActiveReportId(allReports[0].id);
+        }
+        
+        return {
+          ...prev,
+          [chatId]: {
+            ...convo,
+            reports: allReports,
+            closedReports: [] // Move all to open
+          }
+        };
+      } else if (openReports.length > 0) {
+        // If charts are already open, just set the first one as active
+        setActiveReportId(openReports[0].id);
+      }
+      
+      return prev;
+    });
+  };
+
   const handleNewChat = () => {
     const newId = Date.now().toString();
     const welcomeMessage = {
@@ -451,7 +570,8 @@ const DashboardPage = () => {
       title: "New Conversation", 
       timestamp: new Date().toISOString(), 
       messages: [welcomeMessage], 
-      reports: [] 
+      reports: [],
+      closedReports: []
     };
     setConversations(prev => ({ ...prev, [newId]: newConvo }));
     setActiveConversationId(newId);
@@ -486,12 +606,13 @@ const DashboardPage = () => {
       <div className="flex-1 flex overflow-hidden">
         <Sidebar
           isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}
-          chatHistory={chatHistory} onSelectChat={handleSelectChat}
+          chatHistory={chatHistory} conversations={conversations}
+          onSelectChat={handleSelectChat} onShowCharts={handleShowCharts}
           activeChatId={activeConversationId} onNewChat={handleNewChat}
           onDeleteChat={handleDeleteChat} showCloseButton={true}
         />
-        <div className={`flex-1 flex flex-col`}>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className={`flex-1 flex flex-col bg-white/95 backdrop-blur-sm`}>
+          <div className="flex-1 overflow-y-auto">
             {messages && messages.length > 0 ? (
               <>
                 {messages.map((msg, i) => {
@@ -509,6 +630,7 @@ const DashboardPage = () => {
                       messageIndex={i}
                       isLastUserMessage={isLastUserMessage}
                       onEdit={handleEditMessage}
+                      isLoading={false}
                     />
                   );
                 })}
@@ -545,7 +667,15 @@ const DashboardPage = () => {
                 setConversations(prev => {
                   const convo = prev[activeConversationId];
                   if (!convo) return prev;
+                  
+                  // Find the report being closed
+                  const reportToClose = convo.reports.find(r => r.id === reportId);
+                  
+                  // Move to closedReports instead of deleting
                   const updatedReports = convo.reports.filter(r => r.id !== reportId);
+                  const updatedClosedReports = reportToClose 
+                    ? [...(Array.isArray(convo.closedReports) ? convo.closedReports : []), reportToClose]
+                    : (Array.isArray(convo.closedReports) ? convo.closedReports : []);
                   
                   // If closing the active report, switch to the last remaining one
                   if (activeReportId === reportId && updatedReports.length > 0) {
@@ -558,9 +688,39 @@ const DashboardPage = () => {
                     ...prev,
                     [activeConversationId]: {
                       ...convo,
-                      reports: updatedReports
+                      reports: updatedReports,
+                      closedReports: updatedClosedReports
                     }
                   };
+                });
+              }}
+              closedReports={closedReports}
+              onRestoreReport={(reportId) => {
+                setConversations(prev => {
+                  const convo = prev[activeConversationId];
+                  if (!convo) return prev;
+                  
+                  // Find the report to restore
+                  const reportToRestore = convo.closedReports?.find(r => r.id === reportId);
+                  
+                  if (reportToRestore) {
+                    // Move back to reports
+                    const updatedClosedReports = convo.closedReports.filter(r => r.id !== reportId);
+                    const updatedReports = [...(Array.isArray(convo.reports) ? convo.reports : []), reportToRestore];
+                    
+                    // Set as active report
+                    setActiveReportId(reportId);
+                    
+                    return {
+                      ...prev,
+                      [activeConversationId]: {
+                        ...convo,
+                        reports: updatedReports,
+                        closedReports: updatedClosedReports
+                      }
+                    };
+                  }
+                  return prev;
                 });
               }}
               isExpanded={isChartExpanded}

@@ -10,7 +10,9 @@ import {
   FileDown,
   Image,
   FileText,
-  ChevronDown
+  ChevronDown,
+  RotateCcw,
+  Archive
 } from 'lucide-react';
 
 const Canvas = ({ 
@@ -20,10 +22,13 @@ const Canvas = ({
   allReports, 
   activeReportId, 
   onReportChange, 
-  onCloseReport 
+  onCloseReport,
+  closedReports = [],
+  onRestoreReport
 }) => {
   const plotRef = useRef(null);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+  const [showClosedReports, setShowClosedReports] = useState(false);
 
   // Enhanced download handler with multiple formats
   const handleDownload = (format = 'png') => {
@@ -106,7 +111,48 @@ const Canvas = ({
               </button>
             </button>
           ))}
+          
+          {/* Closed Reports Button */}
+          {closedReports && closedReports.length > 0 && (
+            <button
+              onClick={() => setShowClosedReports(!showClosedReports)}
+              className="ml-2 px-4 py-3 text-sm font-medium flex items-center gap-2 text-gray-600 hover:text-teal-600 hover:bg-gray-100 transition-colors relative"
+              title={`View ${closedReports.length} closed chart${closedReports.length > 1 ? 's' : ''}`}
+            >
+              <Archive className="w-4 h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Closed ({closedReports.length})</span>
+            </button>
+          )}
         </div>
+        
+        {/* Closed Reports Dropdown */}
+        {showClosedReports && closedReports && closedReports.length > 0 && (
+          <div className="border-t border-gray-200 bg-white max-h-64 overflow-y-auto">
+            <div className="p-2">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-2 py-1 mb-1">
+                Closed Charts
+              </div>
+              {closedReports.map((closedRep) => (
+                <button
+                  key={closedRep.id}
+                  onClick={() => {
+                    if (onRestoreReport) {
+                      onRestoreReport(closedRep.id);
+                    }
+                    setShowClosedReports(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-700 rounded-lg flex items-center justify-between group transition-colors"
+                >
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <BarChart3 className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                    <span className="truncate">{closedRep.title}</span>
+                  </div>
+                  <RotateCcw className="w-4 h-4 text-gray-400 group-hover:text-teal-600 flex-shrink-0 ml-2" title="Restore chart" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Report toolbar */}

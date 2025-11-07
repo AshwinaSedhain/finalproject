@@ -32,7 +32,7 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
     if (dbConfig?.connectionString) {
       fetchDashboardData();
     }
-  }, [dbConfig]);
+  }, [dbConfig?.connectionString]); // Re-fetch when connection string changes
 
   const handleSaveDbConfig = async (config) => {
     if (config && config.connectionString) {
@@ -110,7 +110,7 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 text-teal-600 animate-spin mx-auto mb-4" />
+          <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading dashboard data...</p>
         </div>
       </div>
@@ -121,12 +121,12 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <p className="text-gray-900 font-semibold mb-2">Error loading dashboard</p>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={fetchDashboardData}
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
           >
             Retry
           </button>
@@ -138,19 +138,19 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Left Sidebar */}
-      <div className="w-16 bg-teal-600 flex flex-col items-center py-6 gap-4">
+      <div className="w-16 bg-white border-r border-gray-200 flex flex-col items-center py-6 gap-4">
         <button 
-          className="p-3 rounded-lg bg-teal-700 hover:bg-teal-800 transition-colors"
+          className="p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors border-2 border-blue-200"
           title="Analytics Dashboard"
         >
-          <Database className="w-6 h-6 text-white" />
+          <Database className="w-6 h-6 text-blue-600" />
         </button>
         <button 
           onClick={() => navigate('/chat')}
-          className="p-3 rounded-lg hover:bg-teal-700/50 transition-colors"
+          className="p-3 rounded-lg hover:bg-gray-100 transition-colors border-2 border-transparent"
           title="Chat with Database"
         >
-          <BarChart3 className="w-6 h-6 text-white" />
+          <BarChart3 className="w-6 h-6 text-gray-600" />
         </button>
       </div>
 
@@ -180,7 +180,7 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
               </div>
               <button
                 onClick={fetchDashboardData}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Refresh"
               >
                 <RefreshCw className="w-5 h-5 text-gray-600" />
@@ -189,7 +189,7 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
           </div>
 
           {/* Chat with Database Button - Prominent */}
-          <div className="mb-6 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-6 border border-teal-200">
+          <div className="mb-6 bg-white rounded-xl p-6 border border-gray-200 shadow-md">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to Explore Your Data?</h3>
@@ -197,120 +197,212 @@ const AnalyticsDashboard = ({ activeView, onChatClick }) => {
               </div>
               <button
                 onClick={() => navigate('/chat')}
-                className="px-8 py-4 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-3 whitespace-nowrap"
+                className="px-8 py-4 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all font-semibold text-lg shadow-md hover:shadow-lg flex items-center gap-3 whitespace-nowrap"
               >
                 <BarChart3 className="w-6 h-6" />
                 Chat with Database
-                <span className="text-teal-200">→</span>
+                <span className="text-white">→</span>
               </button>
             </div>
           </div>
 
-          {/* Analytics Overview Cards */}
+          {/* Analytics Overview Cards - 6 KPIs */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Analytics Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
               {dashboardData?.metrics?.map((metric, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 relative overflow-hidden"
-                  style={{
-                    background: `linear-gradient(135deg, ${metric.color}15 0%, ${metric.color}05 100%)`,
-                  }}
+                  className="bg-white rounded-xl p-6 shadow-md border border-gray-200 relative overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10"
-                    style={{ background: metric.color, transform: 'translate(30%, -30%)' }}
-                  />
                   <div className="relative">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 rounded-lg" style={{ backgroundColor: `${metric.color}20` }}>
+                      <div className="p-2 rounded-lg bg-gray-50 border border-gray-200">
                         <span className="text-lg">{metric.icon || '📊'}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-600">{metric.label}</span>
+                      <span className="text-sm font-medium text-gray-700">{metric.label}</span>
                     </div>
                     <div className="text-3xl font-bold text-gray-900">{metric.value}</div>
-                    {metric.unit && <span className="text-sm text-gray-500 ml-2">{metric.unit}</span>}
+                    {metric.unit && <span className="text-sm text-gray-600 ml-2">{metric.unit}</span>}
+                    {/* Small colorful line chart area at bottom */}
+                    <div className="mt-4 h-12 relative">
+                      <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor={['#14b8a6', '#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'][index % 6]} stopOpacity="0.3" />
+                            <stop offset="100%" stopColor={['#14b8a6', '#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'][index % 6]} stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d={`M 0,${40 - Math.random() * 10} L 20,${40 - Math.random() * 15} L 40,${40 - Math.random() * 20} L 60,${40 - Math.random() * 12} L 80,${40 - Math.random() * 18} L 100,${40 - Math.random() * 8}`}
+                          fill={`url(#gradient-${index})`}
+                          stroke={['#14b8a6', '#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'][index % 6]}
+                          strokeWidth="2"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Top Selling Products Chart */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Top Selling Products</h2>
+          {/* Charts Grid - Row 1: Three Horizontal Bar Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Sales by Item */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Sales by Item</h3>
               </div>
-              <div className="p-6">
+              <div className="p-4" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {dashboardData?.topSellingChart ? (
                   <Plot
                     data={dashboardData.topSellingChart.data}
                     layout={{
                       ...dashboardData.topSellingChart.layout,
-                      responsive: true,
-                      autosize: true
+                      height: 350,
+                      margin: { l: 200, r: 20, t: 20, b: 40 }
                     }}
                     config={{ responsive: true, displayModeBar: false }}
-                    style={{ width: '100%', height: '400px' }}
+                    style={{ width: '100%' }}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-96 text-gray-500">
-                    <div className="text-center">
-                      <p className="mb-2">No sales data available</p>
-                      <p className="text-sm">Try asking questions in the chat interface to generate data.</p>
-                    </div>
+                  <div className="flex items-center justify-center h-80 text-gray-500 text-sm">
+                    No data available
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Right Sidebar - Charts and Lists */}
-            <div className="space-y-6">
-              {/* Pie Chart */}
-              {dashboardData?.pieChart && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Overview</h3>
+            {/* Sales by Item Category */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Sales by Item Category</h3>
+              </div>
+              <div className="p-4">
+                {dashboardData?.salesByCategoryChart ? (
                   <Plot
-                    data={dashboardData.pieChart.data}
+                    data={dashboardData.salesByCategoryChart.data}
                     layout={{
-                      ...dashboardData.pieChart.layout,
-                      height: 300,
-                      showlegend: true,
-                      margin: { l: 0, r: 0, t: 0, b: 0 }
+                      ...dashboardData.salesByCategoryChart.layout,
+                      height: 350,
+                      margin: { l: 150, r: 20, t: 20, b: 40 }
                     }}
                     config={{ responsive: true, displayModeBar: false }}
                     style={{ width: '100%' }}
                   />
+                ) : (
+                  <div className="flex items-center justify-center h-80 text-slate-600 text-sm">
+                    No data available
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sales by Product Group */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Sales by Product Group</h3>
+              </div>
+              <div className="p-4" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {dashboardData?.salesByGroupChart ? (
+                  <Plot
+                    data={dashboardData.salesByGroupChart.data}
+                    layout={{
+                      ...dashboardData.salesByGroupChart.layout,
+                      height: 350,
+                      margin: { l: 150, r: 20, t: 20, b: 40 }
+                    }}
+                    config={{ responsive: true, displayModeBar: false }}
+                    style={{ width: '100%' }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-80 text-slate-600 text-sm">
+                    No data available
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Grid - Row 2: Pie Chart and Unsold Items */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Sales by Division Pie Chart */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Sales by Division</h3>
+              {dashboardData?.salesByDivisionChart ? (
+                <Plot
+                  data={dashboardData.salesByDivisionChart.data}
+                  layout={{
+                    ...dashboardData.salesByDivisionChart.layout,
+                    height: 300
+                  }}
+                  config={{ responsive: true, displayModeBar: false }}
+                  style={{ width: '100%' }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-80 text-slate-600 text-sm">
+                  No data available
                 </div>
               )}
+            </div>
 
-              {/* Most Used Items */}
-              {dashboardData?.topItems && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    {dashboardData.topItemsTitle || "Most Used Items This Week"}
-                  </h3>
-                  <div className="space-y-4">
-                    {dashboardData.topItems.map((item, idx) => (
-                      <div key={idx}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-700 font-medium">{item.name}</span>
-                          <span className="text-gray-600">{item.used}/{item.total}</span>
+            {/* Unsold Items List */}
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Unsold Items
+              </h3>
+              {dashboardData?.unsoldItems && dashboardData.unsoldItems.length > 0 ? (
+                <div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {dashboardData.unsoldItems.length} out of {dashboardData.unsoldItems.length + 10} items are unsold
+                  </p>
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {dashboardData.unsoldItems.map((item, idx) => {
+                      const itemColors = [
+                        'bg-orange-50 border-orange-200',
+                        'bg-green-50 border-green-200',
+                        'bg-blue-50 border-blue-200',
+                        'bg-purple-50 border-purple-200',
+                        'bg-teal-50 border-teal-200',
+                        'bg-pink-50 border-pink-200'
+                      ];
+                      const itemColor = itemColors[idx % itemColors.length];
+                      return (
+                        <div key={idx} className={`p-3 ${itemColor} rounded-lg border`}>
+                          <span className="text-sm font-medium text-gray-900">
+                            {item.id && item.id !== 'None' ? `${item.id} - ` : ''}{item.name}
+                          </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${item.color || 'bg-teal-600'}`}
-                            style={{ width: `${(item.used / item.total) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-80 text-gray-500 text-sm">
+                  No unsold items found
                 </div>
               )}
             </div>
           </div>
+
+          {/* Revenue Overview Pie Chart (if available) */}
+          {dashboardData?.pieChart && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-md p-6 mb-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Overview</h3>
+              <Plot
+                data={dashboardData.pieChart.data}
+                layout={{
+                  ...dashboardData.pieChart.layout,
+                  height: 300,
+                  showlegend: true,
+                  margin: { l: 0, r: 0, t: 0, b: 0 }
+                }}
+                config={{ responsive: true, displayModeBar: false }}
+                style={{ width: '100%' }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
